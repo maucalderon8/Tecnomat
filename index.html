@@ -3,176 +3,362 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Descargando PDF…</title>
+  <title>TecnoMat – Presupuesto</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'DM Sans', sans-serif;
-      background: #0f0f11;
-      color: #e8e8e8;
-      min-height: 100vh;
+      font-family: 'Open Sans', Arial, sans-serif;
+      font-size: 11px;
+      color: #222;
+      background: #f0f0f0;
+    }
+
+    /* ── Barra de acciones (NO se imprime) ── */
+    #toolbar {
+      background: #0a3d7a;
+      color: #fff;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
-      justify-content: center;
-    }
-
-    .card {
-      background: #18181c;
-      border: 1px solid #2a2a30;
-      border-radius: 16px;
-      padding: 48px 56px;
-      text-align: center;
-      max-width: 420px;
-      width: 90%;
-      box-shadow: 0 0 60px rgba(0,0,0,0.6);
-    }
-
-    .icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-      display: block;
-      animation: bounce 1.2s ease infinite alternate;
-    }
-
-    @keyframes bounce {
-      from { transform: translateY(0); }
-      to   { transform: translateY(-8px); }
-    }
-
-    h1 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .filename {
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: #888;
-      background: #111114;
-      border: 1px solid #222228;
-      border-radius: 8px;
-      padding: 8px 14px;
-      margin: 16px 0;
-      word-break: break-all;
-    }
-
-    .status {
+      gap: 12px;
       font-size: 13px;
-      color: #aaa;
-      margin-top: 8px;
-      min-height: 20px;
     }
-
-    .bar-wrap {
-      background: #111114;
-      border-radius: 99px;
-      height: 4px;
-      margin-top: 20px;
-      overflow: hidden;
-    }
-
-    .bar {
-      height: 100%;
-      border-radius: 99px;
-      background: linear-gradient(90deg, #4f8ef7, #a78bfa);
-      width: 0%;
-      transition: width 0.6s ease;
-    }
-
-    .btn {
-      display: inline-block;
-      margin-top: 24px;
-      padding: 10px 24px;
-      background: linear-gradient(90deg, #4f8ef7, #a78bfa);
+    #toolbar span { flex: 1; font-weight: 600; letter-spacing: 0.02em; }
+    #toolbar button {
+      background: #d63a1a;
       color: #fff;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
       border: none;
-      border-radius: 8px;
+      padding: 8px 22px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 700;
       cursor: pointer;
-      text-decoration: none;
+      transition: background 0.2s;
+    }
+    #toolbar button:hover { background: #b5300f; }
+
+    /* ── Documento ── */
+    .page {
+      width: 900px;
+      margin: 24px auto;
+      padding: 28px 36px 36px;
+      background: #fff;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.13);
     }
 
-    .note {
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .logo-left img,
+    .logo-right img {
+      height: 72px;
+      display: block;
+    }
+
+    .tagline {
+      text-align: center;
+      flex: 1;
+      font-size: 18px;
+      font-weight: 400;
+      color: #222;
+      letter-spacing: 0.01em;
+    }
+    .tagline strong { font-weight: 700; }
+
+    .info-grid {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 20px;
+    }
+
+    .section-label {
+      color: #d63a1a;
+      font-weight: 700;
       font-size: 11px;
-      color: #555;
-      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .main-table thead tr th {
+      background: #d63a1a;
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 7px 8px;
+      text-align: center;
+      border: 1px solid #c0331a;
+    }
+
+    .main-table tbody tr td {
+      border: 1px solid #ddd;
+      padding: 7px 8px;
+      font-size: 11px;
+      text-align: center;
+      background: #fff;
+    }
+
+    .main-table tbody tr td:first-child,
+    .main-table tbody tr td:nth-child(2) {
+      text-align: left;
+    }
+
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .totals-table td {
+      padding: 5px 8px;
+      font-size: 11px;
+      border: 1px solid #ddd;
+    }
+
+    .totals-table .spacer {
+      border: none;
+      background: transparent;
+    }
+
+    .totals-table .label {
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .totals-table .amount {
+      text-align: right;
+      width: 17%;
+    }
+
+    .notas-box {
+      font-size: 11px;
+      color: #222;
       line-height: 1.6;
+      white-space: pre-wrap;
+      margin-top: 4px;
+    }
+
+    .terms {
+      margin-top: 22px;
+      font-size: 9.5px;
+      color: #444;
+      line-height: 1.55;
+    }
+    .terms strong { font-weight: 700; }
+
+    /* ── Error ── */
+    #error-msg {
+      display: none;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      color: #7a5c00;
+      padding: 12px 20px;
+      margin: 20px auto;
+      width: 900px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    @media print {
+      #toolbar { display: none !important; }
+      body { background: #fff; }
+      .page { width: 100%; margin: 0; padding: 12px 18px; box-shadow: none; }
     }
   </style>
 </head>
 <body>
-<div class="card">
-  <span class="icon">📄</span>
-  <h1>Descarga lista</h1>
-  <div class="filename" id="fname">—</div>
-  <div class="status" id="status">Haz clic para guardar el PDF con el nombre correcto.</div>
-  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
 
-  <a id="dlBtn" class="btn" href="#" target="_blank">⬇ Descargar PDF</a>
-
-  <div class="note">
-    Si el navegador abre el PDF en lugar de descargarlo,<br>
-    usa <strong>Archivo → Guardar como…</strong> y ponle el nombre correcto.
-  </div>
+<!-- Barra de acción -->
+<div id="toolbar">
+  <span>TecnoMat – Presupuesto</span>
+  <button onclick="descargarPDF()">⬇ Descargar PDF</button>
+  <button onclick="window.print()">🖨 Imprimir</button>
 </div>
 
+<div id="error-msg"></div>
+
+<!-- ══════════════ DOCUMENTO ══════════════ -->
+<div class="page" id="documento">
+
+  <div class="header">
+    <div class="logo-left">
+      <img id="img-logo" src="" alt="TecnoMat Logo" height="72" />
+    </div>
+    <div class="tagline">
+      <strong style="color:#0a3d7a;">The help you need</strong>
+      <strong style="color:#d63a1a;">when you need it.</strong>
+    </div>
+    <div class="logo-right">
+      <img id="img-mascota" src="" alt="TecnoMat Mascota" height="72" />
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div style="flex:1.5;">
+      <div class="section-label">Dirección de la empresa</div>
+      <div style="font-size:11px; margin-bottom:10px;">
+        Av.Via Magna # 19 P1<br>
+        Teléfono: 5533993537
+      </div>
+      <div class="section-label">Datos del cliente</div>
+      <table style="width:100%; border-collapse:collapse;">
+        <tr>
+          <td style="font-weight:700; padding:2px 4px 2px 0; white-space:nowrap; width:1%;">Nombre del cliente:</td>
+          <td id="td-cliente" style="padding:2px 0;"></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; padding:2px 4px 2px 0; white-space:nowrap; width:1%;">Dirección:</td>
+          <td id="td-direccion" style="padding:2px 0;"></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; padding:2px 4px 2px 0; white-space:nowrap; width:1%;">Teléfono:</td>
+          <td id="td-celular" style="padding:2px 0;"></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="flex:1; text-align:right;">
+      <table style="margin-left:auto; border-collapse:collapse;">
+        <tr>
+          <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Fecha:</td>
+          <td id="td-fecha" style="font-weight:700; padding:2px 0; text-align:left;"></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Presupuesto n.º:</td>
+          <td id="td-presupuesto" style="font-weight:700; padding:2px 0; text-align:left;"></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Id. del cliente:</td>
+          <td id="td-idcliente" style="padding:2px 0; text-align:left;"></td>
+        </tr>
+        <tr><td colspan="2" style="height:16px;"></td></tr>
+        <tr>
+          <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Válido hasta:</td>
+          <td id="td-vencimiento" style="padding:2px 0; text-align:left;"></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Técnico:</td>
+          <td id="td-tecnicos" style="padding:2px 0; text-align:left;"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div class="section-label">Comentarios o instrucciones especiales</div>
+    <div id="td-notas" class="notas-box"></div>
+  </div>
+
+  <!-- TABLA DE CONCEPTOS (HTML inyectado) -->
+  <table class="main-table">
+    <thead>
+      <tr>
+        <th style="width:13%;">Categoría</th>
+        <th style="width:38%;">Descripción</th>
+        <th style="width:9%;">Unidad</th>
+        <th style="width:9%;">Cantidad</th>
+        <th style="width:14%;">P.Unitario</th>
+        <th style="width:17%;">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-conceptos">
+      <!-- Se rellena desde URL -->
+    </tbody>
+  </table>
+
+  <!-- TABLA DE TOTALES (HTML inyectado) -->
+  <table class="totals-table" id="tabla-totales">
+    <!-- Se rellena desde URL -->
+  </table>
+
+  <div class="terms">
+    <strong>Términos y Condiciones:</strong><br>
+    La cotización incluye únicamente mano de obra, salvo que se indique expresamente lo contrario. Materiales, refacciones o trabajos adicionales no incluidos deberán cotizarse y autorizarse por separado. Cuando los materiales sean adquiridos por el cliente, la cantidad y calidad son de su exclusiva responsabilidad. TecnoMat no se hace responsable por fallas, retrasos o resultados derivados del uso de dichos materiales.
+    TecnoMat podrá solicitar un anticipo para programar, iniciar o asegurar la ejecución del servicio. El porcentaje del anticipo será indicado en la cotización. Ningún trabajo iniciará sin la recepción del anticipo correspondiente, en su caso. Los descuentos aplican únicamente cuando se contrata y paga la totalidad del proyecto. No aplican en servicios parciales. El pago del saldo deberá realizarse conforme a los plazos acordados; el incumplimiento faculta a TecnoMat a suspender el servicio. La garantía aplica solo sobre trabajos ejecutados conforme al alcance autorizado y no cubre materiales proporcionados por el cliente. Cancelaciones o reprogramaciones de último momento podrán generar cargos administrativos.
+  </div>
+
+</div><!-- /.page -->
+
 <script>
-  const params  = new URLSearchParams(location.search);
-  const pdfUrl  = params.get('url')  || '';
-  const pdfName = params.get('name') || 'documento.pdf';
+  // ── Utilidades ──────────────────────────────────────────────
+  const p = new URLSearchParams(window.location.search);
 
-  document.getElementById('fname').textContent = pdfName;
+  function txt(id, param, fallback = '') {
+    const el = document.getElementById(id);
+    if (el) el.textContent = p.get(param) ?? fallback;
+  }
 
-  const btn = document.getElementById('dlBtn');
+  function html(id, param) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = p.get(param);
+    if (val) el.innerHTML = decodeURIComponent(val);
+  }
 
-  if (pdfUrl) {
-    // Intenta descarga directa con fetch (funciona si no hay CORS)
-    async function intentarFetch() {
-      try {
-        document.getElementById('status').textContent = 'Preparando archivo…';
-        document.getElementById('bar').style.width = '40%';
+  function src(id, param) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = p.get(param);
+    if (val) el.src = decodeURIComponent(val);
+  }
 
-        const resp = await fetch(pdfUrl, { redirect: 'follow' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  // ── Rellenar campos de TEXTO ─────────────────────────────────
+  txt('td-cliente',     'CLIENTE');
+  txt('td-direccion',   'DIRECCION');
+  txt('td-celular',     'CELULAR');
+  txt('td-fecha',       'FECHA');
+  txt('td-presupuesto', 'PRESUPUESTO');
+  txt('td-idcliente',   'IDCLIENTE');
+  txt('td-vencimiento', 'VENCIMIENTO');
+  txt('td-tecnicos',    'TECNICOS');
+  txt('td-notas',       'NOTAS');
 
-        document.getElementById('bar').style.width = '80%';
-        const blob = await resp.blob();
+  // ── Rellenar campos de HTML (conceptos y totales) ────────────
+  html('tbody-conceptos', 'CONCEPTOS');
+  html('tabla-totales',   'TOTALES');
 
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = pdfName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+  // ── Logos (fijos) ────────────────────────────────────────────
+  document.getElementById('img-logo').src    = 'https://i.imgur.com/3ksvRUa.png';
+  document.getElementById('img-mascota').src = 'https://i.imgur.com/2FvoDKt.png';
 
-        document.getElementById('bar').style.width = '100%';
-        document.getElementById('status').textContent = '✅ ¡Descarga iniciada!';
-        btn.textContent = '⬇ Descargar de nuevo';
-        btn.href = pdfUrl;
+  // ── Título de página ─────────────────────────────────────────
+  const presupuesto = p.get('PRESUPUESTO') ?? '';
+  const cliente     = p.get('CLIENTE')     ?? '';
+  if (presupuesto || cliente) {
+    document.title = `TecnoMat – ${presupuesto} – ${cliente}`;
+  }
 
-      } catch (e) {
-        // Si fetch falla por CORS, cae al botón manual
-        document.getElementById('bar').style.width = '0%';
-        document.getElementById('status').textContent = 'Haz clic en el botón para descargar.';
-      }
-    }
+  // ── Aviso si no hay parámetros ───────────────────────────────
+  if (!p.toString()) {
+    const err = document.getElementById('error-msg');
+    err.style.display = 'block';
+    err.textContent = '⚠ No se recibieron parámetros en la URL. Agrega ?CLIENTE=...&PRESUPUESTO=... etc.';
+  }
 
-    intentarFetch();
+  // ── Generar PDF ──────────────────────────────────────────────
+  function descargarPDF() {
+    const el       = document.getElementById('documento');
+    const filename = `TecnoMat-${presupuesto || 'presupuesto'}-${cliente || 'cliente'}.pdf`;
 
-    // El botón siempre funciona como respaldo
-    btn.href = pdfUrl;
-    btn.setAttribute('download', pdfName);
-
-  } else {
-    document.getElementById('status').textContent = 'No se proporcionó URL.';
-    btn.style.display = 'none';
+    html2pdf().set({
+      margin:      [8, 8, 8, 8],
+      filename:    filename,
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(el).save();
   }
 </script>
 </body>
