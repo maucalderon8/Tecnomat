@@ -81,97 +81,99 @@
       border-radius: 99px;
       background: linear-gradient(90deg, #4f8ef7, #a78bfa);
       width: 0%;
-      transition: width 0.4s ease;
+      transition: width 0.6s ease;
     }
 
-    .error {
-      color: #f87171;
-      font-size: 13px;
-      margin-top: 12px;
-      display: none;
+    .btn {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 10px 24px;
+      background: linear-gradient(90deg, #4f8ef7, #a78bfa);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .note {
+      font-size: 11px;
+      color: #555;
+      margin-top: 16px;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
 <div class="card">
   <span class="icon">📄</span>
-  <h1>Preparando tu PDF…</h1>
+  <h1>Descarga lista</h1>
   <div class="filename" id="fname">—</div>
-  <div class="status" id="status">Conectando con el servidor…</div>
+  <div class="status" id="status">Haz clic para guardar el PDF con el nombre correcto.</div>
   <div class="bar-wrap"><div class="bar" id="bar"></div></div>
-  <div class="error" id="err">
-    ⚠️ No se pudo descargar el archivo. <a href="#" onclick="reintentar()" style="color:#a78bfa">Reintentar</a>
+
+  <a id="dlBtn" class="btn" href="#" target="_blank">⬇ Descargar PDF</a>
+
+  <div class="note">
+    Si el navegador abre el PDF en lugar de descargarlo,<br>
+    usa <strong>Archivo → Guardar como…</strong> y ponle el nombre correcto.
   </div>
 </div>
 
 <script>
-  // ─── CONFIGURACIÓN ───────────────────────────────────────────────
-  // Obtiene los parámetros desde la URL:
-  //   ?url=URL_CODIFICADA  → URL del PDF a descargar
-  //   &name=NOMBRE.pdf     → Nombre con el que se guardará
-  // Ejemplo de uso desde Glide:
-  //   https://tuusuario.github.io/pdf-dl/?url=https%3A%2F%2Fpdfwizard...&name=TecnoMat-LKSZO.pdf
-  // ─────────────────────────────────────────────────────────────────
-
   const params  = new URLSearchParams(location.search);
   const pdfUrl  = params.get('url')  || '';
   const pdfName = params.get('name') || 'documento.pdf';
 
-  const statusEl = document.getElementById('status');
-  const barEl    = document.getElementById('bar');
-  const fnameEl  = document.getElementById('fname');
-  const errEl    = document.getElementById('err');
+  document.getElementById('fname').textContent = pdfName;
 
-  fnameEl.textContent = pdfName;
+  const btn = document.getElementById('dlBtn');
 
-  function setBar(pct) { barEl.style.width = pct + '%'; }
-  function setStatus(msg) { statusEl.textContent = msg; }
+  if (pdfUrl) {
+    // Intenta descarga directa con fetch (funciona si no hay CORS)
+    async function intentarFetch() {
+      try {
+        document.getElementById('status').textContent = 'Preparando archivo…';
+        document.getElementById('bar').style.width = '40%';
 
-  async function descargar() {
-    errEl.style.display = 'none';
-    if (!pdfUrl) {
-      setStatus('No se proporcionó URL.');
-      return;
+        const resp = await fetch(pdfUrl, { redirect: 'follow' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+        document.getElementById('bar').style.width = '80%';
+        const blob = await resp.blob();
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = pdfName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        document.getElementById('bar').style.width = '100%';
+        document.getElementById('status').textContent = '✅ ¡Descarga iniciada!';
+        btn.textContent = '⬇ Descargar de nuevo';
+        btn.href = pdfUrl;
+
+      } catch (e) {
+        // Si fetch falla por CORS, cae al botón manual
+        document.getElementById('bar').style.width = '0%';
+        document.getElementById('status').textContent = 'Haz clic en el botón para descargar.';
+      }
     }
 
-    try {
-      setStatus('Descargando desde el servidor…');
-      setBar(30);
+    intentarFetch();
 
-      const resp = await fetch(pdfUrl);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    // El botón siempre funciona como respaldo
+    btn.href = pdfUrl;
+    btn.setAttribute('download', pdfName);
 
-      setBar(70);
-      setStatus('Procesando archivo…');
-
-      const blob = await resp.blob();
-      setBar(90);
-
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = pdfName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      setBar(100);
-      setStatus('✅ ¡Descarga iniciada!');
-
-      // Cierra la pestaña automáticamente después de 2s (opcional)
-      // setTimeout(() => window.close(), 2000);
-
-    } catch (e) {
-      setBar(0);
-      setStatus('');
-      errEl.style.display = 'block';
-      console.error(e);
-    }
+  } else {
+    document.getElementById('status').textContent = 'No se proporcionó URL.';
+    btn.style.display = 'none';
   }
-
-  function reintentar() { descargar(); }
-
-  // Empieza automáticamente
-  descargar();
 </script>
 </body>
 </html>
