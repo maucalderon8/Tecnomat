@@ -204,14 +204,14 @@
 
   <div class="header">
     <div class="logo-left">
-      <img src="https://i.imgur.com/3ksvRUa.png" alt="TecnoMat Logo" height="72" />
+      <img id="img-logo" src="" alt="TecnoMat Logo" height="72" />
     </div>
     <div class="tagline">
       <strong style="color:#0a3d7a;">The help you need</strong>
       <strong style="color:#d63a1a;">when you need it.</strong>
     </div>
     <div class="logo-right">
-      <img src="https://i.imgur.com/2FvoDKt.png" alt="TecnoMat Mascota" height="72" />
+      <img id="img-mascota" src="" alt="TecnoMat Mascota" height="72" />
     </div>
   </div>
 
@@ -314,7 +314,7 @@
     const el = document.getElementById(id);
     if (!el) return;
     const val = p.get(param);
-    if (val) el.innerHTML = decodeURIComponent(val);
+    if (val) el.innerHTML = val;
   }
 
   function src(id, param) {
@@ -340,8 +340,8 @@
   html('tabla-totales',   'TOTALES');
 
   // ── Logos (fijos) ────────────────────────────────────────────
-  document.getElementById('img-logo').src    = 'https://i.imgur.com/3ksvRUa.png';
-  document.getElementById('img-mascota').src = 'https://i.imgur.com/2FvoDKt.png';
+  document.getElementById('img-logo').src    = 'logo.png';
+  document.getElementById('img-mascota').src = 'mascota.png';
 
   // ── Título de página ─────────────────────────────────────────
   const presupuesto = p.get('PRESUPUESTO') ?? '';
