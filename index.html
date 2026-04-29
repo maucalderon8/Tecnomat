@@ -4,20 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TecnoMat – Presupuesto</title>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Open Sans', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
       font-size: 11px;
       color: #222;
       background: #f0f0f0;
     }
 
-    /* ── Barra de acciones (NO se imprime) ── */
+    /* ── Toolbar ── */
     #toolbar {
       background: #0a3d7a;
       color: #fff;
@@ -27,7 +25,7 @@
       gap: 12px;
       font-size: 13px;
     }
-    #toolbar span { flex: 1; font-weight: 600; letter-spacing: 0.02em; }
+    #toolbar span { flex: 1; font-weight: 600; }
     #toolbar button {
       background: #d63a1a;
       color: #fff;
@@ -37,49 +35,44 @@
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s;
     }
-    #toolbar button:hover { background: #b5300f; }
+    #toolbar button:disabled { background: #888; cursor: not-allowed; }
 
-    /* ── Documento ── */
+    /* ── Documento — 794px = ancho A4 exacto a 96dpi ── */
     .page {
-      width: 900px;
+      width: 794px;
       margin: 24px auto;
-      padding: 28px 36px 36px;
+      padding: 24px 32px 32px;
       background: #fff;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.13);
     }
 
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
-
-    .logo-left img,
-    .logo-right img {
-      height: 72px;
+    .logo-left img, .logo-right img {
+      height: 64px;
+      width: 110px;
+      object-fit: contain;
       display: block;
     }
-
     .tagline {
       text-align: center;
       flex: 1;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400;
       color: #222;
-      letter-spacing: 0.01em;
     }
     .tagline strong { font-weight: 700; }
 
     .info-grid {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 14px;
-      gap: 20px;
+      margin-bottom: 12px;
+      gap: 16px;
     }
-
     .section-label {
       color: #d63a1a;
       font-weight: 700;
@@ -87,140 +80,96 @@
       margin-bottom: 4px;
     }
 
-    .main-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
+    .main-table { width: 100%; border-collapse: collapse; }
     .main-table thead tr th {
       background: #d63a1a;
       color: #fff;
       font-weight: 700;
       font-size: 11px;
-      padding: 7px 8px;
+      padding: 6px 7px;
       text-align: center;
       border: 1px solid #c0331a;
     }
-
     .main-table tbody tr td {
       border: 1px solid #ddd;
-      padding: 7px 8px;
+      padding: 6px 7px;
       font-size: 11px;
       text-align: center;
       background: #fff;
     }
-
     .main-table tbody tr td:first-child,
-    .main-table tbody tr td:nth-child(2) {
-      text-align: left;
-    }
+    .main-table tbody tr td:nth-child(2) { text-align: left; }
 
-    .totals-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-    }
+    .totals-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .totals-table td { padding: 4px 7px; font-size: 11px; border: 1px solid #ddd; }
+    .totals-table .spacer { border: none; background: transparent; }
+    .totals-table .label  { font-weight: 700; text-align: right; }
+    .totals-table .amount { text-align: right; width: 17%; }
 
-    .totals-table td {
-      padding: 5px 8px;
-      font-size: 11px;
-      border: 1px solid #ddd;
-    }
+    .notas-box { font-size: 11px; color: #222; line-height: 1.5; white-space: pre-wrap; margin-top: 3px; }
 
-    .totals-table .spacer {
-      border: none;
-      background: transparent;
-    }
-
-    .totals-table .label {
-      font-weight: 700;
-      text-align: right;
-    }
-
-    .totals-table .amount {
-      text-align: right;
-      width: 17%;
-    }
-
-    .notas-box {
-      font-size: 11px;
-      color: #222;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      margin-top: 4px;
-    }
-
-    .terms {
-      margin-top: 22px;
-      font-size: 9.5px;
-      color: #444;
-      line-height: 1.55;
-    }
+    .terms { margin-top: 18px; font-size: 9px; color: #444; line-height: 1.5; }
     .terms strong { font-weight: 700; }
 
-    /* ── Error ── */
     #error-msg {
       display: none;
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      color: #7a5c00;
-      padding: 12px 20px;
-      margin: 20px auto;
-      width: 900px;
-      border-radius: 4px;
-      font-size: 13px;
+      background: #fff3cd; border: 1px solid #ffc107;
+      color: #7a5c00; padding: 12px 20px;
+      margin: 20px auto; width: 794px;
+      border-radius: 4px; font-size: 13px;
+    }
+
+    /* Contenedor oculto para captura — tamaño A4 fijo */
+    #pdf-wrapper {
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: 794px;
+      background: #fff;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     @media print {
-      #toolbar { display: none !important; }
-      #error-msg { display: none !important; }
+      #toolbar, #error-msg { display: none !important; }
       body { background: #fff; margin: 0; }
-      .page {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 12px 18px !important;
-        box-shadow: none !important;
-      }
+      .page { width: 100% !important; margin: 0 !important; padding: 12px 18px !important; }
     }
-
-    @page {
-      size: A4 portrait;
-      margin: 10mm;
-    }
+    @page { size: A4 portrait; margin: 10mm; }
   </style>
 </head>
 <body>
 
-<!-- Barra de acción -->
 <div id="toolbar">
   <span>TecnoMat – Presupuesto</span>
-  <button onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+  <button id="btn-pdf" onclick="descargarPDF()">⬇ Descargar PDF</button>
 </div>
 
 <div id="error-msg"></div>
 
-<!-- ══════════════ DOCUMENTO ══════════════ -->
+<!-- Contenedor oculto donde se clona el doc para captura exacta -->
+<div id="pdf-wrapper"></div>
+
 <div class="page" id="documento">
 
   <div class="header">
     <div class="logo-left">
-      <img id="img-logo" src="" alt="TecnoMat Logo" height="72" />
+      <img id="img-logo" src="logo.png" alt="TecnoMat Logo" width="110" height="64" />
     </div>
     <div class="tagline">
       <strong style="color:#0a3d7a;">The help you need</strong>
       <strong style="color:#d63a1a;">when you need it.</strong>
     </div>
     <div class="logo-right">
-      <img id="img-mascota" src="" alt="TecnoMat Mascota" height="72" />
+      <img id="img-mascota" src="mascota.png" alt="TecnoMat Mascota" width="110" height="64" />
     </div>
   </div>
 
   <div class="info-grid">
     <div style="flex:1.5;">
       <div class="section-label">Dirección de la empresa</div>
-      <div style="font-size:11px; margin-bottom:10px;">
-        Av.Via Magna # 19 P1<br>
-        Teléfono: 5533993537
+      <div style="font-size:11px; margin-bottom:9px;">
+        Av.Via Magna # 19 P1<br>Teléfono: 5533993537
       </div>
       <div class="section-label">Datos del cliente</div>
       <table style="width:100%; border-collapse:collapse;">
@@ -253,7 +202,7 @@
           <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Id. del cliente:</td>
           <td id="td-idcliente" style="padding:2px 0; text-align:left;"></td>
         </tr>
-        <tr><td colspan="2" style="height:16px;"></td></tr>
+        <tr><td colspan="2" style="height:14px;"></td></tr>
         <tr>
           <td style="font-weight:700; padding:2px 8px 2px 0; text-align:right;">Válido hasta:</td>
           <td id="td-vencimiento" style="padding:2px 0; text-align:left;"></td>
@@ -266,12 +215,11 @@
     </div>
   </div>
 
-  <div style="margin-bottom:14px;">
+  <div style="margin-bottom:12px;">
     <div class="section-label">Comentarios o instrucciones especiales</div>
     <div id="td-notas" class="notas-box"></div>
   </div>
 
-  <!-- TABLA DE CONCEPTOS (HTML inyectado) -->
   <table class="main-table">
     <thead>
       <tr>
@@ -283,15 +231,10 @@
         <th style="width:17%;">Subtotal</th>
       </tr>
     </thead>
-    <tbody id="tbody-conceptos">
-      <!-- Se rellena desde URL -->
-    </tbody>
+    <tbody id="tbody-conceptos"></tbody>
   </table>
 
-  <!-- TABLA DE TOTALES (HTML inyectado) -->
-  <table class="totals-table" id="tabla-totales">
-    <!-- Se rellena desde URL -->
-  </table>
+  <table class="totals-table" id="tabla-totales"></table>
 
   <div class="terms">
     <strong>Términos y Condiciones:</strong><br>
@@ -299,65 +242,94 @@
     TecnoMat podrá solicitar un anticipo para programar, iniciar o asegurar la ejecución del servicio. El porcentaje del anticipo será indicado en la cotización. Ningún trabajo iniciará sin la recepción del anticipo correspondiente, en su caso. Los descuentos aplican únicamente cuando se contrata y paga la totalidad del proyecto. No aplican en servicios parciales. El pago del saldo deberá realizarse conforme a los plazos acordados; el incumplimiento faculta a TecnoMat a suspender el servicio. La garantía aplica solo sobre trabajos ejecutados conforme al alcance autorizado y no cubre materiales proporcionados por el cliente. Cancelaciones o reprogramaciones de último momento podrán generar cargos administrativos.
   </div>
 
-</div><!-- /.page -->
+</div>
 
 <script>
-  // ── Utilidades ──────────────────────────────────────────────
   const p = new URLSearchParams(window.location.search);
 
-  function txt(id, param, fallback = '') {
+  function txt(id, param) {
     const el = document.getElementById(id);
-    if (el) el.textContent = p.get(param) ?? fallback;
+    if (el) el.textContent = p.get(param) ?? '';
   }
 
-  function html(id, param) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const val = p.get(param);
-    if (val) el.innerHTML = val;
-  }
-
-  function src(id, param) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const val = p.get(param);
-    if (val) el.src = decodeURIComponent(val);
-  }
-
-  // ── Rellenar campos de TEXTO ─────────────────────────────────
   txt('td-cliente',     'CLIENTE');
   txt('td-direccion',   'DIRECCION');
   txt('td-celular',     'CELULAR');
-  txt('td-fecha',       'FECHA');
   txt('td-presupuesto', 'PRESUPUESTO');
   txt('td-idcliente',   'IDCLIENTE');
-  txt('td-vencimiento', 'VENCIMIENTO');
   txt('td-tecnicos',    'TECNICOS');
   txt('td-notas',       'NOTAS');
 
-  // ── Rellenar campos de HTML (conceptos y totales) ────────────
-  html('tbody-conceptos', 'CONCEPTOS');
-  html('tabla-totales',   'TOTALES');
+  document.getElementById('td-fecha').textContent       = (p.get('FECHA')       ?? '').split(',')[0].trim();
+  document.getElementById('td-vencimiento').textContent = (p.get('VENCIMIENTO') ?? '').split(',')[0].trim();
 
-  // ── Logos (fijos) ────────────────────────────────────────────
-  document.getElementById('img-logo').src    = 'logo.png';
-  document.getElementById('img-mascota').src = 'mascota.png';
+  const conceptos = p.get('CONCEPTOS');
+  const totales   = p.get('TOTALES');
+  if (conceptos) document.getElementById('tbody-conceptos').innerHTML = conceptos;
+  if (totales)   document.getElementById('tabla-totales').innerHTML   = totales;
 
-  // ── Título de página ─────────────────────────────────────────
-  const presupuesto = p.get('PRESUPUESTO') ?? '';
-  const cliente     = p.get('CLIENTE')     ?? '';
-  if (presupuesto || cliente) {
-    document.title = `TecnoMat – ${presupuesto} – ${cliente}`;
-  }
+  const pres = p.get('PRESUPUESTO') ?? '';
+  const cli  = p.get('CLIENTE')     ?? '';
+  if (pres || cli) document.title = `TecnoMat – ${pres} – ${cli}`;
 
-  // ── Aviso si no hay parámetros ───────────────────────────────
   if (!p.toString()) {
     const err = document.getElementById('error-msg');
     err.style.display = 'block';
-    err.textContent = '⚠ No se recibieron parámetros en la URL. Agrega ?CLIENTE=...&PRESUPUESTO=... etc.';
+    err.textContent = '⚠ No se recibieron parámetros en la URL.';
   }
 
+  function descargarPDF() {
+    const btn = document.getElementById('btn-pdf');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generando...';
 
+    const original = document.getElementById('documento');
+    const wrapper  = document.getElementById('pdf-wrapper');
+
+    // Clonar el documento en el wrapper oculto de exactamente 794px
+    const clone = original.cloneNode(true);
+    clone.style.cssText = 'width:794px;margin:0;padding:24px 32px 32px;background:#fff;';
+    wrapper.innerHTML = '';
+    wrapper.appendChild(clone);
+    wrapper.style.visibility = 'visible';
+
+    // Esperar imágenes del clon
+    const imgs  = clone.querySelectorAll('img');
+    const ready = Array.from(imgs).map(img =>
+      img.complete ? Promise.resolve() :
+      new Promise(r => { img.onload = r; img.onerror = r; })
+    );
+
+    Promise.all(ready).then(() => {
+      const filename = `TecnoMat-${pres || 'presupuesto'}-${cli || 'cliente'}.pdf`;
+
+      html2pdf().set({
+        margin:      0,
+        filename:    filename,
+        image:       { type: 'jpeg', quality: 0.97 },
+        html2canvas: {
+          scale:       2,
+          useCORS:     true,
+          logging:     false,
+          width:       794,
+          windowWidth: 794,
+          scrollX:     0,
+          scrollY:     0
+        },
+        jsPDF: {
+          unit:      'px',
+          format:    [794, 1123],   /* A4 en px a 96dpi */
+          orientation: 'portrait',
+          hotfixes:  ['px_scaling']
+        }
+      }).from(clone).save().then(() => {
+        wrapper.style.visibility = 'hidden';
+        wrapper.innerHTML = '';
+        btn.disabled = false;
+        btn.textContent = '⬇ Descargar PDF';
+      });
+    });
+  }
 </script>
 </body>
 </html>
