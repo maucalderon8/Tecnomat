@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Descargando PDF…</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0f0f11;
+      color: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #18181c;
+      border: 1px solid #2a2a30;
+      border-radius: 16px;
+      padding: 48px 56px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 0 60px rgba(0,0,0,0.6);
+    }
+
+    .icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      display: block;
+      animation: bounce 1.2s ease infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-8px); }
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .filename {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: #888;
+      background: #111114;
+      border: 1px solid #222228;
+      border-radius: 8px;
+      padding: 8px 14px;
+      margin: 16px 0;
+      word-break: break-all;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+
+    .bar-wrap {
+      background: #111114;
+      border-radius: 99px;
+      height: 4px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #4f8ef7, #a78bfa);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .error {
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <span class="icon">📄</span>
+  <h1>Preparando tu PDF…</h1>
+  <div class="filename" id="fname">—</div>
+  <div class="status" id="status">Conectando con el servidor…</div>
+  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  <div class="error" id="err">
+    ⚠️ No se pudo descargar el archivo. <a href="#" onclick="reintentar()" style="color:#a78bfa">Reintentar</a>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIGURACIÓN ───────────────────────────────────────────────
+  // Obtiene los parámetros desde la URL:
+  //   ?url=URL_CODIFICADA  → URL del PDF a descargar
+  //   &name=NOMBRE.pdf     → Nombre con el que se guardará
+  // Ejemplo de uso desde Glide:
+  //   https://tuusuario.github.io/pdf-dl/?url=https%3A%2F%2Fpdfwizard...&name=TecnoMat-LKSZO.pdf
+  // ─────────────────────────────────────────────────────────────────
+
+  const params  = new URLSearchParams(location.search);
+  const pdfUrl  = params.get('url')  || '';
+  const pdfName = params.get('name') || 'documento.pdf';
+
+  const statusEl = document.getElementById('status');
+  const barEl    = document.getElementById('bar');
+  const fnameEl  = document.getElementById('fname');
+  const errEl    = document.getElementById('err');
+
+  fnameEl.textContent = pdfName;
+
+  function setBar(pct) { barEl.style.width = pct + '%'; }
+  function setStatus(msg) { statusEl.textContent = msg; }
+
+  async function descargar() {
+    errEl.style.display = 'none';
+    if (!pdfUrl) {
+      setStatus('No se proporcionó URL.');
+      return;
+    }
+
+    try {
+      setStatus('Descargando desde el servidor…');
+      setBar(30);
+
+      const resp = await fetch(pdfUrl);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+      setBar(70);
+      setStatus('Procesando archivo…');
+
+      const blob = await resp.blob();
+      setBar(90);
+
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = pdfName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setBar(100);
+      setStatus('✅ ¡Descarga iniciada!');
+
+      // Cierra la pestaña automáticamente después de 2s (opcional)
+      // setTimeout(() => window.close(), 2000);
+
+    } catch (e) {
+      setBar(0);
+      setStatus('');
+      errEl.style.display = 'block';
+      console.error(e);
+    }
+  }
+
+  function reintentar() { descargar(); }
+
+  // Empieza automáticamente
+  descargar();
+</script>
+</body>
+</html>
