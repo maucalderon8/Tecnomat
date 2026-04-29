@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TecnoMat – Presupuesto</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
 
@@ -173,8 +173,19 @@
 
     @media print {
       #toolbar { display: none !important; }
-      body { background: #fff; }
-      .page { width: 100%; margin: 0; padding: 12px 18px; box-shadow: none; }
+      #error-msg { display: none !important; }
+      body { background: #fff; margin: 0; }
+      .page {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 12px 18px !important;
+        box-shadow: none !important;
+      }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
     }
   </style>
 </head>
@@ -183,8 +194,7 @@
 <!-- Barra de acción -->
 <div id="toolbar">
   <span>TecnoMat – Presupuesto</span>
-  <button id="btn-pdf" onclick="descargarPDF()">⬇ Descargar PDF</button>
-  <button onclick="window.print()">🖨 Imprimir</button>
+  <button onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
 </div>
 
 <div id="error-msg"></div>
@@ -347,42 +357,7 @@
     err.textContent = '⚠ No se recibieron parámetros en la URL. Agrega ?CLIENTE=...&PRESUPUESTO=... etc.';
   }
 
-  // ── Generar PDF ──────────────────────────────────────────────
-  function descargarPDF() {
-    const el       = document.getElementById('documento');
-    const filename = `TecnoMat-${presupuesto || 'presupuesto'}-${cliente || 'cliente'}.pdf`;
-    const btn      = document.getElementById('btn-pdf');
 
-    btn.disabled   = true;
-    btn.textContent = '⏳ Generando...';
-
-    // Esperar a que las imágenes estén cargadas antes de capturar
-    const imgs = el.querySelectorAll('img');
-    const imgPromises = Array.from(imgs).map(img =>
-      img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
-    );
-
-    Promise.all(imgPromises).then(() => {
-      html2pdf().set({
-        margin:      [10, 10, 10, 10],   // mm: arriba, derecha, abajo, izquierda
-        filename:    filename,
-        image:       { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale:       2,
-          useCORS:     true,
-          logging:     false,
-          windowWidth: 972,              // ancho del .page (900px) + padding (36px*2) + margen
-          scrollX:     0,
-          scrollY:     0
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      }).from(el).save().then(() => {
-        btn.disabled    = false;
-        btn.textContent = '⬇ Descargar PDF';
-      });
-    });
-  }
 </script>
 </body>
 </html>
