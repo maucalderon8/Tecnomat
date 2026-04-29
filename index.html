@@ -41,7 +41,7 @@
     #documento {
       width: 794px;
       margin: 24px auto;
-      padding: 24px 32px 32px;
+      padding: 28px 36px 36px;
       background: #fff;
     }
 
@@ -274,20 +274,18 @@
     window.scrollTo(0, 0);
 
     html2pdf().set({
-      margin:      [10, 10, 10, 10],
+      margin:      0,
       filename:    filename,
       image:       { type: 'jpeg', quality: 0.97 },
       html2canvas: {
         scale:       2,
         useCORS:     true,
         logging:     false,
-        windowWidth: 814,   /* 794px doc + 10px margen × 2 */
+        windowWidth: 794,
         scrollX:     -window.scrollX,
-        scrollY:     -window.scrollY,
-        x:           0,
-        y:           0
+        scrollY:     -window.scrollY
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait', hotfixes: ['px_scaling'] }
     }).from(el).save().then(() => {
       btn.disabled = false;
       btn.textContent = '⬇ Descargar PDF';
