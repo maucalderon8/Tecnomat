@@ -76,7 +76,10 @@
       margin-bottom: 4px;
     }
 
-    .main-table { width: 100%; border-collapse: collapse; }
+    /* Ancho compartido para la última columna de ambas tablas */
+    :root { --last-col: 135px; }
+
+    .main-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     .main-table thead tr th {
       background: #d63a1a;
       color: #fff;
@@ -86,6 +89,7 @@
       text-align: center;
       border: 1px solid #c0331a;
     }
+    .main-table thead tr th:last-child { width: var(--last-col); }
     .main-table tbody tr td {
       border: 1px solid #ddd;
       padding: 6px 7px;
@@ -96,11 +100,11 @@
     .main-table tbody tr td:first-child,
     .main-table tbody tr td:nth-child(2) { text-align: left; }
 
-    .totals-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .totals-table { width: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
     .totals-table td { padding: 4px 7px; font-size: 11px; border: 1px solid #ddd; }
     .totals-table .spacer { border: none; background: transparent; }
     .totals-table .label  { font-weight: 700; text-align: right; }
-    .totals-table .amount { text-align: right; width: 17%; }
+    .totals-table .amount { text-align: right; width: var(--last-col); }
 
     .notas-box { font-size: 11px; color: #222; line-height: 1.5; white-space: pre-wrap; margin-top: 3px; }
 
@@ -157,7 +161,7 @@
     <div style="flex:1.5;">
       <div class="section-label">Dirección de la empresa</div>
       <div style="font-size:11px; margin-bottom:9px;">
-        Av.Via Magna # 19 P1<br>Teléfono: 5533993537
+        Av. Via Magna # 19 P1<br>Teléfono: 5533993537
       </div>
       <div class="section-label">Datos del cliente</div>
       <table style="width:100%; border-collapse:collapse;">
@@ -216,7 +220,7 @@
         <th style="width:9%;">Unidad</th>
         <th style="width:9%;">Cantidad</th>
         <th style="width:14%;">P.Unitario</th>
-        <th style="width:17%;">Subtotal</th>
+        <th>Subtotal</th>
       </tr>
     </thead>
     <tbody id="tbody-conceptos"></tbody>
