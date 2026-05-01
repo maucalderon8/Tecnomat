@@ -14,21 +14,23 @@
     }
 
     /*
-      html2pdf a 96 dpi, A4 = 794 × 1123 px.
-      Márgenes 12mm c/u → 12 * (96/25.4) ≈ 45.35 px × 2 = ~91 px.
-      Área útil real: 794 - 91 ≈ 703px → usamos 700px con seguridad.
-      El wrapper va centrado en pantalla pero el PDF lo toma por #documento.
+      Estrategia: márgenes = 0 en html2pdf, el padding del propio #documento
+      actúa como margen. Así html2canvas nunca recorta nada.
+
+      A4 a 96 dpi = 794px de ancho total.
+      Padding lateral 28px c/lado → área de contenido: 794 - 56 = 738px.
+      #documento = 794px, padding 28px → interior 738px.
     */
     #wrapper {
-      width: 700px;
+      width: 794px;
       margin: 0 auto;
       padding: 20px 0;
     }
 
     #documento {
-      width: 700px;
+      width: 794px;
       background: #fff;
-      padding: 0;
+      padding: 24px 28px 28px 28px;
     }
 
     /* ── HEADER ── */
@@ -296,23 +298,23 @@
 
   /* ── 2. CONFIGURACIÓN html2pdf ── */
   /*
-    A4 en mm: 210 × 297.
-    Márgenes 12mm → área útil: 186 × 273 mm.
-    A 96 dpi: 186mm * (96/25.4) ≈ 703px → #documento ancho 700px encaja perfecto.
+    Márgenes = 0: el padding del #documento (28px) actúa como margen visual.
+    De esta forma html2canvas captura el elemento completo sin recortar.
+    windowWidth: 794 = ancho A4 a 96dpi, así el layout se renderiza igual
+    que en pantalla y encaja perfectamente en la página.
   */
   const PDF_OPTIONS = {
-    margin:      [12, 12, 12, 12],          // mm [top, right, bottom, left]
+    margin:      0,
     image:       { type: 'jpeg', quality: 0.92 },
     html2canvas: {
       scale:       2,
       useCORS:     true,
       logging:     false,
-      width:       700,                     // forzar el ancho del canvas al del documento
-      windowWidth: 700
+      windowWidth: 794                      // A4 @ 96dpi
     },
     jsPDF: {
-      unit:        'mm',
-      format:      'a4',
+      unit:        'px',
+      format:      [794, 1123],             // A4 exacto en px a 96dpi
       orientation: 'portrait',
       compress:    true
     }
