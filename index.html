@@ -12,6 +12,8 @@
       font-size: 11px;
       color: #222;
       background: #fff;
+      margin: 0;
+      overflow-x: hidden;
     }
 
     #documento {
@@ -229,15 +231,21 @@
     const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
     s.onload = () => {
+      const doc = document.getElementById('documento');
+      // Forzar ancho A4 exacto antes de capturar
+      doc.style.width    = '794px';
+      doc.style.maxWidth = '794px';
+      doc.style.margin   = '0';
+
       html2pdf()
         .set({
           margin:      [15, 15, 15, 15],
           filename:    `TecnoMat – ${nombre}.pdf`,
           image:       { type: 'jpeg', quality: 0.85 },
-          html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
+          html2canvas: { scale: 1, useCORS: true, logging: false, width: 794, windowWidth: 794 },
           jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
         })
-        .from(document.getElementById('documento'))
+        .from(doc)
         .save();
     };
     document.head.appendChild(s);
