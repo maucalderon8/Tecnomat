@@ -11,33 +11,12 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
       font-size: 11px;
       color: #222;
-      background: #f0f0f0;
-    }
-
-    #toolbar {
-      background: #0a3d7a;
-      color: #fff;
-      padding: 10px 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-    }
-    #toolbar span { flex: 1; font-weight: 600; }
-    #toolbar button {
-      background: #d63a1a;
-      color: #fff;
-      border: none;
-      padding: 8px 22px;
-      border-radius: 4px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
+      background: #fff;
     }
 
     #documento {
       width: 721px;
-      margin: 24px auto;
+      margin: 0 auto;
       padding: 28px 0 36px;
       background: #fff;
     }
@@ -115,36 +94,14 @@
     .terms { margin-top: 18px; font-size: 9px; color: #444; line-height: 1.5; }
     .terms strong { font-weight: 700; }
 
-    #error-msg {
-      display: none;
-      background: #fff3cd; border: 1px solid #ffc107;
-      color: #7a5c00; padding: 12px 20px;
-      margin: 20px auto; width: 794px;
-      border-radius: 4px; font-size: 13px;
-    }
-
-    /* ── Impresión / PDF ── */
-    @media print {
-      #toolbar, #error-msg { display: none !important; }
-      body { background: #fff; margin: 0; }
-      #documento {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-      }
-    }
     @page { size: A4 portrait; margin: 15mm; }
+    @media print {
+      body { background: #fff; margin: 0; }
+      #documento { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    }
   </style>
 </head>
 <body>
-
-<div id="toolbar">
-  <span>TecnoMat – Presupuesto</span>
-  <button onclick="descargarPDF()">⬇ Descargar PDF</button>
-</div>
-
-<div id="error-msg"></div>
 
 <div id="documento">
 
@@ -268,38 +225,9 @@
   const cli  = p.get('CLIENTE')     ?? '';
   if (pres || cli) document.title = `TecnoMat – ${pres} – ${cli}`;
 
-  if (!p.toString()) {
-    const err = document.getElementById('error-msg');
-    err.style.display = 'block';
-    err.textContent = '⚠ No se recibieron parámetros en la URL.';
-  }
-</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-  function descargarPDF() {
-    const btn = document.querySelector('#toolbar button');
-    btn.disabled = true;
-    btn.textContent = '⏳ Generando…';
-
-    const pres = new URLSearchParams(window.location.search).get('PRESUPUESTO') ?? 'Presupuesto';
-    const cli  = new URLSearchParams(window.location.search).get('CLIENTE')     ?? '';
-    const nombre = [pres, cli].filter(Boolean).join(' – ');
-
-    html2pdf()
-      .set({
-        margin:      [15, 15, 15, 15], // mm
-        filename:    `TecnoMat – ${nombre}.pdf`,
-        image:       { type: 'jpeg', quality: 0.75 },
-        html2canvas: { scale: 1.5, useCORS: true, logging: false },
-        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-      })
-      .from(document.getElementById('documento'))
-      .save()
-      .finally(() => {
-        btn.disabled = false;
-        btn.textContent = '⬇ Descargar PDF';
-      });
+  // Abrir diálogo de impresión automáticamente al cargar (solo si hay parámetros)
+  if (p.toString()) {
+    window.addEventListener('load', () => window.print());
   }
 </script>
 </body>
