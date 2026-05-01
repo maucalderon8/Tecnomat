@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TecnoMat – Presupuesto</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -228,8 +227,11 @@
 
   // Descargar PDF automáticamente al cargar (solo si hay parámetros)
   if (p.toString()) {
-    window.addEventListener('load', () => {
-      const nombre = [pres, cli].filter(Boolean).join(' – ') || 'Presupuesto';
+    const nombre = [pres, cli].filter(Boolean).join(' – ') || 'Presupuesto';
+
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload = () => {
       html2pdf()
         .set({
           margin:      [15, 15, 15, 15],
@@ -240,7 +242,8 @@
         })
         .from(document.getElementById('documento'))
         .save();
-    });
+    };
+    document.head.appendChild(s);
   }
 </script>
 
